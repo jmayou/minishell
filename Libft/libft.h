@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/09 09:57:28 by jmayou            #+#    #+#             */
-/*   Updated: 2024/06/07 14:12:22 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/08/16 15:34:30 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 int		ft_isalpha(int c);
 int		ft_isdigit(int c);
 int		ft_isprint(int c);
-int		ft_isalnum(int c);
+int		ft_isalnum(char c);
 int		ft_isascii(int c);
 int		ft_strlen(const char *s);
 int		ft_atoi(const char *str);

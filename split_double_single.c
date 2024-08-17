@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/08/09 16:06:57 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/08/16 19:27:23 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,8 +83,8 @@ int ft_check(char *str)
 int is_quote(char c) 
 {
     if (c == '\'' || c == '\"') 
-        return 1;
-    return 0;
+        return (1);
+   return 0;
 }
 void    ft_filling(char *s,char **s1,int lenf,int start)
 {
@@ -194,18 +194,229 @@ void printer(char **a)
     while (a[i])
         printf ("--%s--\n", a[i++]);    
 }
-
-int main(int ac,char **av,char **env) 
+int ft_strcmp_len(char *s1,char *s2, int len)
 {
-    // char *str = "g|h<\"<'j\">k<\"l\">>bl";
-    // int i = 0;
-    // char **resu = ft_split_command(str);
+    int	i;
+
+	i = 0;
+	while (i < len && s1[i] && s2[i])
+	{
+        if(s1[i] == s2[i])
+            i++;
+        else
+            break;
+	}
+    if(i == len)
+        return(0);
+	return (s1[i] - s2[i]);
+}
+
+char *get_env_value(char **env, char *var)
+{
+    int i = 0;
+    int len = ft_strlen(var);
     
-    // while(resu[i])
-    // {
-    //     printf("--%s--\n",resu[i]);
-    //     i++;
-    // }
+    while(env[i])
+    {
+        if(ft_strcmp_len(env[i],var,len) == 0 && env[i][len] == '=')
+            return(env[i] + len + 1);
+        i++;
+    }
+    return(NULL);
+}
+char *get_variable(char *command,int pos)
+{
+    char *var;
+    int i = 0;
+    while(command[i + pos])
+    {
+        if(ft_isalnum(command[i + pos])== 0)
+            break;
+        i++;
+    }
+    var = ft_substr(command,pos,i);
+    return(var);
+}
+char *ft_replace(char *command,char *var,char *value,int k)
+{
+    int i = 0;
+    int j = 0;
+    int len_val = ft_strlen(value);
+    int len_var = ft_strlen(var);
+    int len_all = ft_strlen(command) - len_var - 1 + len_val;
+    char *resu;
+    int lock = 1;
+
+    resu = malloc(len_all + 1);
+    while(command[i])
+    {
+        if(command[i] == '$' && lock)
+        {
+            k = 0;
+            while(value && (k < len_val))
+            {
+                resu[j++] = value[k++];
+            }
+            i += len_var;
+            lock = 0;
+        }
+        else
+            resu[j++] = command[i];
+        i++;
+    }
+    resu[j] = '\0';
+    return(resu);
+}
+void  ft_search_variable(char ***command,char **env)
+{
+    int i = -1;
+    int j = 0;
+    char *var;
+    char *value;
+    char *tmp;
+    int len;
+    
+    while((*command)[++i])
+    {
+        len = ft_strlen((*command)[i]);
+        if((*command)[i][0] != '\'')
+        {
+            j = -1;
+            while (++j < len)
+            {
+                if((*command)[i][j] == '$')
+                {
+                    var = get_variable((*command)[i], j + 1);
+                    j += ft_strlen (var);
+                    value = get_env_value(env, var);
+                    tmp = ft_replace((*command)[i], var, value, 0);
+                    free (var);
+                    free((*command)[i]);
+                    (*command)[i] = tmp;
+                    len = ft_strlen((*command)[i]);
+                }
+            }
+        }
+    }
+}
+int is_space(char c) 
+{
+    return (c == ' ' || c == '\t');
+}
+char *get_last_word(char *str) 
+{
+    char *last_word;
+    int len = ft_strlen(str);
+    while (len > 0 && !is_space(str[len - 1])) {
+        len--;
+    }
+    last_word = ft_strdup(&str[len]);
+    return last_word;
+}
+
+char *get_first_word(char *str) {
+    int len = 0;
+    int i = 0;
+    while (str[len] && !is_space(str[len])) {
+        len++;
+    }
+    char *word = (char *)malloc(len + 1);
+    while(i <= len)
+    {
+        word[i] = str[i];
+        i++;
+    }
+     word[i] = '\0';
+    return word;
+}
+void    ft_strcpy(char **s1, char **s2)
+{
+	int i = 0;
+	
+	while ((*s2)[i] != '\0')
+	{
+		(*s1)[i] = (*s2)[i];
+		i++;
+	}
+	(*s1)[i] = '\0';
+}
+char *ft_remove(char *str,int len_r, int n)
+{
+    int i;
+    int j;
+    int len;
+    int len_s;
+    char *resu;
+
+    len_s = strlen(str);
+    len = len_s - len_r + 1;
+    resu = malloc(len);
+    if(n == 1)
+    {
+        i = -1;
+        while(++i < len - 1)
+            resu[i] = str[i];
+    }
+    else if(n == 0)
+    {
+        i = len_s - len_r;
+        j = 0;
+        while(j < len - 1)
+            resu[j++] = str[i++];
+        i = j;
+    }
+    resu[i] = '\0';
+    return(resu);
+}
+void    ft_collect(char **next,char **str, int n)
+{
+    int len_next;
+    int len_word;
+    char *word;
+    char *new_next;
+    char *new_str;
+    if(n == 1)
+        word = get_last_word((*str));
+    else
+        word = get_first_word((*str));
+    len_word = ft_strlen(word);
+    len_next = ft_strlen((*next));
+    new_next = malloc(len_next + len_word + 1);
+
+    new_next[0] = (*next)[0];
+    ft_strcpy(&new_next[1], word);
+    ft_strcpy(&new_next[1 + len_word], &(*next)[1]);
+    free((*next));
+    (*next) = new_next;
+    free(word);
+    new_str = ft_remove((*str),len_word, n);
+    free((*str));
+    (*str) = new_str;
+}
+
+char **ft_join(char **str) 
+{
+    int i = 0;
+    int len;
+    int len_next;
+    while (str[i] && str[i + 1]) 
+    {
+        len = ft_strlen(str[i]);
+        len_next = ft_strlen(str[i + 1]);
+       if(is_space(str[i][len - 1]) == 0 && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
+            ft_collect(&str[i + 1],&str[i],1); 
+       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && is_space(str[i + 1][0]) == 0)
+            ft_collect(&str[i],&str[i + 1],0);
+       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
+       {
+            join(&str[i])
+       }
+    }
+    return str;
+}
+
+int main(int ac,char **av,char **env)
+{
     char **command;
     char *input;
     while(1)
@@ -214,6 +425,9 @@ int main(int ac,char **av,char **env)
         if(input == NULL)
             break;
         command = ft_split_command(input);
+        // printer(command);
+        ft_search_variable(&command,env);
+        ft_joined(&command);
         printer(command);
         //printf("%s\n",input);
         // list = parsing(input);

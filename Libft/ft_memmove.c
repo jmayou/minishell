@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_memmove.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jmayou <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/24 13:32:23 by jmayou            #+#    #+#             */
-/*   Updated: 2023/12/31 19:40:08 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/08/15 16:30:19 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,12 +34,13 @@ void	*ft_memmove(void *dst, const void *src, size_t len)
 	return (dst);
 }
 
-//#include <stdio.h>
-//#include <string.h>
-//
-// int main()
-//{
-//    char str1[] = "Hello, World!";
-//    printf(" %s\n", ft_memmove(str1 , str1 + 8 ,4));
-//	return (0);
-//}
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+   char str1[] = "Hello, World!";
+   printf(" %s\n", ft_memmove(str1 , str1 + 4 ,4));
+   printf(" %s\n", memmove(str1 , str1 + 4 ,4));
+	return (0);
+}

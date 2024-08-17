@@ -1,35 +1,42 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_isalnum.c                                       :+:      :+:    :+:   */
+/*   ft_strcpy.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/12/06 19:15:51 by jmayou            #+#    #+#             */
-/*   Updated: 2024/08/10 16:04:18 by jmayou           ###   ########.fr       */
+/*   Created: 2023/12/17 18:28:04 by jmayou            #+#    #+#             */
+/*   Updated: 2024/08/16 15:34:21 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_isalnum(char c)
+size_t	ft_strlcpy(char *dst, const char *s, size_t dsize)
 {
-	if ((c <= 'z' && c >= 'a') || (c <= 'Z' && c >= 'A') || (c <= '9'
-			&& c >= '0') || (c == '_'))
-		return (1);
-	else
-		return (0);
-}
+	size_t	i;
 
+	i = 0;
+	if (dsize == 0)
+		return (ft_strlen(s));
+	while (s[i] && i < dsize - 1)
+	{
+		dst[i] = s[i];
+		i++;
+	}
+	dst[i] = 0;
+	return (ft_strlen(s));
+}
 //#include <stdio.h>
+//#include <string.h>
 // int main()
 //{
-//    char c = 'A';
+//    char dest[20];
+//    size_t len = ft_strlcpy(dest, "lorem ipsum", 3);
+//    printf("%zu %s\n", len, dest);
 //
-//	if (ft_isalnum(c))
-//	{
-//        printf("%c yes\n", alphaNumChar);
-//    } else {
-//        printf("%c no \n", alphaNumChar);
-//    }
+//    char dest1[20];
+//    len = strlcpy(dest1, "lorem ipsum", 3);
+//    printf("%zu %s\n", len, dest1);
+//
 //}
