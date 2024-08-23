@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/08/16 19:27:23 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/08/23 18:40:26 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,7 +321,7 @@ char *get_first_word(char *str) {
         len++;
     }
     char *word = (char *)malloc(len + 1);
-    while(i <= len)
+    while(i < len)
     {
         word[i] = str[i];
         i++;
@@ -329,16 +329,16 @@ char *get_first_word(char *str) {
      word[i] = '\0';
     return word;
 }
-void    ft_strcpy(char **s1, char **s2)
+void    ft_strcpy(char *s1, char *s2)
 {
 	int i = 0;
 	
-	while ((*s2)[i] != '\0')
+	while (s2[i] != '\0')
 	{
-		(*s1)[i] = (*s2)[i];
+		s1[i] = s2[i];
 		i++;
 	}
-	(*s1)[i] = '\0';
+	s1[i] = '\0';
 }
 char *ft_remove(char *str,int len_r, int n)
 {
@@ -348,7 +348,7 @@ char *ft_remove(char *str,int len_r, int n)
     int len_s;
     char *resu;
 
-    len_s = strlen(str);
+    len_s = ft_strlen(str);
     len = len_s - len_r + 1;
     resu = malloc(len);
     if(n == 1)
@@ -368,49 +368,92 @@ char *ft_remove(char *str,int len_r, int n)
     resu[i] = '\0';
     return(resu);
 }
-void    ft_collect(char **next,char **str, int n)
+void    ft_collect_in_first(char **next,char **str)
 {
     int len_next;
     int len_word;
     char *word;
     char *new_next;
     char *new_str;
-    if(n == 1)
-        word = get_last_word((*str));
-    else
-        word = get_first_word((*str));
+    word = get_last_word((*str));
     len_word = ft_strlen(word);
     len_next = ft_strlen((*next));
     new_next = malloc(len_next + len_word + 1);
-
     new_next[0] = (*next)[0];
-    ft_strcpy(&new_next[1], word);
-    ft_strcpy(&new_next[1 + len_word], &(*next)[1]);
+    ft_strcpy(new_next + 1, word);
+
+    ft_strcpy(new_next + (1 + len_word), (*next) + 1);
     free((*next));
     (*next) = new_next;
     free(word);
-    new_str = ft_remove((*str),len_word, n);
+    new_str = ft_remove((*str),len_word, 1);
+    free((*str));
+    (*str) = new_str;
+}
+void    ft_collect_in_last(char **next,char **str)
+{
+    int len_next;
+    int len_word;
+    char *word;
+    char *new_next;
+    char *new_str;
+    word = get_first_word((*str));
+    len_word = ft_strlen(word);
+    len_next = ft_strlen((*next));
+    new_next = malloc(len_next + len_word + 1);
+    ft_strcpy(new_next ,(*next));
+    ft_strcpy(new_next + (len_next - 1), word);
+    new_next[len_next + len_word - 1] = (*next)[len_next - 1];
+    new_next[len_next + len_word ] = '\0';
+    free((*next));
+    (*next) = new_next;
+    free(word);
+    new_str = ft_remove((*str),len_word, 0);
     free((*str));
     (*str) = new_str;
 }
 
-char **ft_join(char **str) 
+char **ft_join(char **str)
 {
     int i = 0;
     int len;
+    int k = 0;
     int len_next;
     while (str[i] && str[i + 1]) 
     {
         len = ft_strlen(str[i]);
         len_next = ft_strlen(str[i + 1]);
        if(is_space(str[i][len - 1]) == 0 && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
-            ft_collect(&str[i + 1],&str[i],1); 
-       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && is_space(str[i + 1][0]) == 0)
-            ft_collect(&str[i],&str[i + 1],0);
-       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
        {
-            join(&str[i])
+            ft_collect_in_first(&str[i + 1],&str[i]); 
+            if(ft_strcmp(str[i],"\0") == 0)
+            {
+                k = i;
+                free(str[k]);
+                while(str[k + 1])
+                {
+                    str[k] = str[k + 1];
+                    k++;
+                }
+                str[k] = NULL;
+            }
        }
+       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && is_space(str[i + 1][0]) == 0)
+       {
+            ft_collect_in_last(&str[i],&str[i + 1]);
+            if(ft_strcmp(str[i + 1],"\0") == 0)
+            {
+                k = i + 1;
+                free(str[k]);
+                while(str[k + 1])
+                {
+                    str[k] = str[k + 1];
+                    k++;
+                }
+                str[k] = NULL;
+            }
+       }
+        i++;
     }
     return str;
 }
@@ -419,6 +462,7 @@ int main(int ac,char **av,char **env)
 {
     char **command;
     char *input;
+    char **re;
     while(1)
     {
         input = readline("\033[0;35mminishell$ \033[0m");
@@ -427,8 +471,9 @@ int main(int ac,char **av,char **env)
         command = ft_split_command(input);
         // printer(command);
         ft_search_variable(&command,env);
-        ft_joined(&command);
-        printer(command);
+        re = ft_join(command);
+        
+       printer(re);
         //printf("%s\n",input);
         // list = parsing(input);
         // excution (list);
