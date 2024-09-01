@@ -6,13 +6,13 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 10:41:28 by jmayou            #+#    #+#             */
-/*   Updated: 2024/06/07 14:14:36 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/08/28 15:49:14 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static int	checkword(const char *str, char c)
+int	checkword(const char *str, char c)
 {
 	int	i;
 	int	word;

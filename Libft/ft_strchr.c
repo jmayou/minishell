@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strchr.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jmayou <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/17 09:48:44 by jmayou            #+#    #+#             */
-/*   Updated: 2023/12/29 18:50:35 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/09/01 13:06:42 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "libft.h"
 
 char	*ft_strchr(const char *str, int c)

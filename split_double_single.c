@@ -6,20 +6,15 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/08/23 18:40:26 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/09/01 22:51:50 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <readline/readline.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include "Libft/libft.h"
+#include "minishell.h"
 
 int ft_close(char *str, char c,int n, int start) 
 {    
     int i ;
-    int espace = 0;
     i = start + 1;
     if(n == 1)
     {
@@ -303,6 +298,12 @@ int is_space(char c)
 {
     return (c == ' ' || c == '\t');
 }
+
+int is_space_or_quote(char c) 
+{
+    return (c == ' ' || c == '\t' || c == '\'' || c == '\"');
+}
+
 char *get_last_word(char *str) 
 {
     char *last_word;
@@ -351,6 +352,7 @@ char *ft_remove(char *str,int len_r, int n)
     len_s = ft_strlen(str);
     len = len_s - len_r + 1;
     resu = malloc(len);
+    i  = 0;
     if(n == 1)
     {
         i = -1;
@@ -359,7 +361,7 @@ char *ft_remove(char *str,int len_r, int n)
     }
     else if(n == 0)
     {
-        i = len_s - len_r;
+        i = len_r;
         j = 0;
         while(j < len - 1)
             resu[j++] = str[i++];
@@ -412,7 +414,23 @@ void    ft_collect_in_last(char **next,char **str)
     free((*str));
     (*str) = new_str;
 }
-
+void ft_fix(char *str)
+{
+    int i = ft_strlen (str);
+    if (str[0] == '\'')
+    {
+        str[0] = '\"';
+        while (i >= 0)
+        {
+            if (str[i] == '\'')
+            {
+                str[i] = '\"';
+                break ;
+            }
+            i--;
+        }
+    }
+}
 char **ft_join(char **str)
 {
     int i = 0;
@@ -423,7 +441,7 @@ char **ft_join(char **str)
     {
         len = ft_strlen(str[i]);
         len_next = ft_strlen(str[i + 1]);
-       if(is_space(str[i][len - 1]) == 0 && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
+       if(is_space_or_quote(str[i][len - 1]) == 0 && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
        {
             ft_collect_in_first(&str[i + 1],&str[i]); 
             if(ft_strcmp(str[i],"\0") == 0)
@@ -438,7 +456,7 @@ char **ft_join(char **str)
                 str[k] = NULL;
             }
        }
-       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && is_space(str[i + 1][0]) == 0)
+       else if((str[i][len - 1] == '\'' || str[i][len - 1] == '\"') && is_space_or_quote(str[i + 1][0]) == 0)
        {
             ft_collect_in_last(&str[i],&str[i + 1]);
             if(ft_strcmp(str[i + 1],"\0") == 0)
@@ -458,26 +476,334 @@ char **ft_join(char **str)
     return str;
 }
 
+void    ft_join_quote(char **str)
+{
+    int i = 0;
+    int len_str;
+    int len_next;
+    char *new_str;
+    int k = 0;
+    
+    while(str[i] && str[i + 1])
+    {
+            len_str = strlen(str[i]);
+            len_next = strlen(str[i + 1]);
+        if((str[i][len_str - 1] == '\'' || str[i][len_str - 1] == '\"') && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
+        {
+            new_str = malloc(len_str + len_next - 1);
+            ft_strcpy(new_str,str[i]);
+            ft_strcpy(new_str + len_str - 1,str[i + 1] + 1);
+            free(str[i]);
+            str[i] = new_str;
+            k = i + 1;
+            free(str[k]);
+            while(str[k + 1])
+            {
+                str[k] = str[k + 1];
+                k++;
+            }
+            str[k] = NULL;
+            i = -1;
+        }
+        i++;
+    }
+}
+
+void fix_quotes (char **str)
+{
+    int i;
+
+    i = 0;
+    while (str[i])
+    {
+        ft_fix(str[i]);
+        i++;
+    }
+}
+void    ft_free(char **str)
+{
+    int i;
+
+    i = 0;
+    while(str[i])
+    {
+        free(str[i]);
+        i++;
+    }
+    free(str);
+}
+int ft_len_arry(char **str)
+{
+    int i;
+    i = 0;
+
+    while(str[i])
+    {
+        i++;
+    }
+    return(i);
+}
+int    filling(char **resu,char *str,char **arry,int i)
+{
+    int j;
+    j = 0;
+    
+    if(str != NULL)
+    {
+        resu[i] = ft_strdup(str);
+        i++;
+    }
+    else
+    {
+        while(arry[j])
+        {
+            resu[i] = ft_strdup(arry[j]);
+            j++;
+            i++;
+        }
+    }
+    resu[i] = NULL;
+    return(i);
+}
+char **ft_split_by_space(char **str)
+{
+    char **mini_str;
+    char **resu;
+    int i = 0;
+    int count = 0;
+    int j = 0;
+    
+    while (str[i])
+    {
+        if (str[i][0] != '"' && str[i][0] != '\'')
+            count += checkword(str[i], ' ');
+        else
+            count++;
+        i++;
+    }
+    resu = malloc(sizeof(char *) * (count + 1));
+    i = 0;
+    while (str[i])
+    {
+        if (str[i][0] != '"' && str[i][0] != '\'')
+        {
+            mini_str = ft_split(str[i], ' ');
+            j = filling(resu, NULL, mini_str, j);
+            ft_free(mini_str);
+        }
+        else
+            j = filling(resu, str[i], NULL, j);
+        i++;
+    }
+    return (resu);
+}
+
+char *disable(char *str)
+{
+    int  i = 1;
+    int j = 0;
+    int len  = ft_strlen(str);
+    char *resu;
+
+    resu = malloc(len -1);
+    while(i < len - 1)
+        resu[j++] = str[i++];
+    resu[j] = '\0';
+    return(resu);
+}
+
+t_dir    *creat_dir_list(int typ,char *name)
+{
+    t_dir  *redir;
+    
+    redir = malloc(sizeof(t_dir));
+    redir->type = typ;
+    if(name[0] == '\"')
+    {
+        redir->file_name =ft_strdup(disable(name));
+        free(disable(name));
+    }
+    else
+        redir->file_name =ft_strdup(name);
+    redir->next = NULL;
+    
+    return(redir);
+}
+void    add_dir_node(t_dir  *redir,int typ,char *name)
+{
+    t_dir *dir;
+    dir = creat_dir_list(typ,name);
+    while(redir->next)
+        redir = redir->next;
+    redir->next = dir;
+}
+void    filling_redir(t_list *list,int typ,char *name,int *c)
+{
+    if((*c) == 0)
+    {
+        list->redir= creat_dir_list(typ,name);
+        (*c) = 1;
+    }
+    else
+        add_dir_node(list->redir,typ,name);
+}
+
+
+char **ft_add_command(char **com,int start,int pos,t_list *list)
+{
+    char **resu;
+    int i = start;
+    int j = 0;
+    int c = 0;
+
+    resu = ft_calloc(sizeof(char *), (pos + 1));
+    while(i < pos)
+    {
+        if (ft_strcmp (com[i], "<<") == 0)
+            filling_redir(list,HEREDOC,com[++i], &c);
+        else if (ft_strcmp (com[i], ">>") == 0)
+            filling_redir(list,APPEND,com[++i], &c);
+        else if (ft_strcmp (com[i], "<") == 0)
+            filling_redir(list,OUT,com[++i], &c);
+        else if (ft_strcmp (com[i], ">") == 0)
+            filling_redir(list,IN,com[++i], &c);
+        else
+        {
+            if(com[i][0] == '\"')
+            {
+                resu[j++] = ft_strdup(disable(com[i]));
+                free(disable(com[i]));
+            }
+            else
+                resu[j++] = ft_strdup(com[i]);
+        }
+        i++;
+    }
+    return (resu);
+}
+
+
+t_list    *creat_list(char **com,int start,int pos)
+{
+    t_list  *list;
+    
+    list = malloc(sizeof(t_list));
+    list->redir = malloc(sizeof(t_dir));
+    list->redir->type = 0;
+    list->redir->next = NULL;
+    list->redir->file_name =NULL;
+    list->command = ft_add_command(com ,start,pos,list);
+    list->next = NULL;
+    
+    return(list);
+}
+void   add_node(t_list *list,char **com,int start,int pos)
+{
+    t_list *lst;
+    lst = creat_list(com ,start,pos);
+    while(list->next)
+        list = list->next;
+    list->next = lst;
+}
+t_list    *ft_filling_list(char **com)
+{
+    int i = 0;
+    t_list  *list;
+    int c = 0;
+    int start = 0;
+
+    while(com[i])
+    {
+        if(ft_strcmp(com[i],"|") == 0  && c == 0)
+        {
+            list = creat_list(com ,start, i);
+            c = 1;
+            start = i + 1;
+        }
+        else if(ft_strcmp(com[i],"|") == 0  && c == 1)
+        {
+            add_node(list,com,start,i);
+            start = i + 1;
+        }
+        i++;
+    }
+    if(c == 0)
+    {
+        list = creat_list(com ,start, i);
+        c = 1;
+    }
+    else if(c == 1)
+        add_node(list,com,start,i);
+    return(list);
+}
+
+void print_list(t_list *list)
+{
+    while (list)
+    {
+        printer (list->command);
+        while (list->redir)
+        {
+            printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
+            list->redir = list->redir->next;
+        }
+        list = list->next;
+    }
+}
+
+char **ft_strdup_arr(char **env)
+{
+    int len = ft_len_arry(env);
+    int  i = 0;
+    char **resu;
+
+    resu = ft_calloc(sizeof(char *) , len + 1);
+    while(i < len)
+    {
+        resu[i] = ft_strdup(env[i]);
+        i++;
+    }
+    return(resu);
+}
+
+void init_shell(t_shell *minishell,char **env)
+{
+    minishell->env = ft_strdup_arr(env);
+    minishell->export = ft_strdup_arr(env);
+    minishell->exit_status = 0;
+    minishell->list = NULL;
+}
+
 int main(int ac,char **av,char **env)
 {
+    (void)ac;
+    (void)av;
+    char **com;
     char **command;
     char *input;
-    char **re;
+    t_shell minishell;
+    
+    init_shell (&minishell,env);
     while(1)
     {
         input = readline("\033[0;35mminishell$ \033[0m");
         if(input == NULL)
-            break;
-        command = ft_split_command(input);
-        // printer(command);
-        ft_search_variable(&command,env);
-        re = ft_join(command);
-        
-       printer(re);
-        //printf("%s\n",input);
-        // list = parsing(input);
-        // excution (list);
-        // free (list);
+            break ;
+        com = ft_split_command(input);
+        if (com)
+        {
+            ft_search_variable(&com,minishell.env);
+            fix_quotes(com);
+            ft_join(com);
+            ft_join_quote(com);
+            command = ft_split_by_space(com);
+            ft_free(com);
+            minishell.list = ft_filling_list(command);
+            print_list (minishell.list);
+            // excution (list);
+            // free_list (list);
+            ft_free (command);
+        }
         add_history(input);
         free (input);
     }
