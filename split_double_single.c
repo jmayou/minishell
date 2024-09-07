@@ -6,12 +6,82 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/09/01 22:51:50 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/09/07 16:27:39 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
+
+int is_space(char c) 
+{
+    return (c == ' ' || c == '\t');
+}
+
+int	check_command(const char *str)
+{
+	int	i;
+	int	word;
+	int	what;
+
+	i = 0;
+	word = 0;
+	what = 0;
+	if (str == NULL)
+		return (0);
+	while (str[i])
+	{
+		if (is_space(str[i]) == 0 && what == 0)
+		{
+			word++;
+			what = 1;
+		}
+		else if (is_space(str[i]) == 1)
+			what = 0;
+		i++;
+	}
+	return (word);
+}
+
+static void	*free_mem(char **str, int i)
+{
+	while (i >= 0)
+	{
+		free(str[i]);
+		i--;
+	}
+	free(str);
+	return (NULL);
+}
+
+char	**ft_split_by_space_tab(char const *s)
+{
+	char	**result;
+	int		i;
+	int		j;
+	int		start;
+
+	i = 0;
+	start = 0;
+	j = 0;
+	result = malloc(sizeof(char *) * (check_command(s) + 1));
+	if (result == NULL)
+		return (NULL);
+	while (j < check_command(s))
+	{
+		while (s[i] && is_space(s[i]) == 1)
+			i++;
+		start = i;
+		while (s[i] && is_space(s[i]) == 0)
+			i++;
+		result[j] = ft_substr(s, start, i - start);
+		if (result[j] == NULL)
+			return (free_mem(result, j));
+		j++;
+	}
+	result[j] = NULL;
+	return (result);
+}
 int ft_close(char *str, char c,int n, int start) 
 {    
     int i ;
@@ -92,7 +162,7 @@ void    ft_filling(char *s,char **s1,int lenf,int start)
         {
             (*s1)[i++] = ' ';
             (*s1)[i++] = s[start++];
-            if(s[start] == '<' || s[start] == '>')
+            if((s[start] == '<' || s[start] == '>') && s[start - 1] == s[start])
                 (*s1)[i++] = s[start++];
             (*s1)[i] = ' ';
         }
@@ -107,17 +177,24 @@ char    *ft_substr_add_space(char *s, int start, int len)
     char    *s1;
     int i;
     int lenf;
-    i = 0;
+    int size;
+
+    size = 1;
+    i = -1;
     if (start > ft_strlen(s))
         return (ft_calloc(1, 1));
     if ((start + len) > ft_strlen(s))
         len = ft_strlen(s) - start;
     lenf = len;
-    while (i < len)
+    while (++i < len)
     {
-        if(s[start + i] == '|' || (s[start + i] == '<' && s[start + i + 1] != '<' ) || (s[start + i] == '>' && s[start + i + 1] != '>' ))
+        if(s[start + i] == '|' || size == 2 ||  (s[start + i] == '<' && s[start + i + 1] != '<') || (s[start + i] == '>' && s[start + i + 1] != '>'))
+        {
             lenf += 2;
-        i++;
+            size = 1;
+        }
+        else if((s[start + i] == '<' && s[start + i + 1] == '<') || (s[start + i] == '>' && s[start + i + 1] == '>'))
+            size+= 1;
     }
     s1 = malloc((lenf + 1) * sizeof(char));
     ft_filling(s,&s1,lenf,start);
@@ -142,7 +219,7 @@ void ft_split_quote(char *str, char ***command)
                 (*command)[count++] = ft_substr(str ,start , i - start + 1);
                 start = i + 1;
             } 
-            else if (!in_quote) 
+            else if (in_quote == 0) 
             {
                 if (i > start) 
                     (*command)[count++] = ft_substr_add_space(str ,start, i - start);
@@ -158,13 +235,19 @@ void ft_split_quote(char *str, char ***command)
     (*command)[count] = NULL;
 }
 
+void printer (char **a);
+
 char **ft_split_command(char *str)
 {
     char **command;
-    int len = ft_check(str);
+    int len;
+
+    if(str[0] == '\0')
+        return(NULL);
+    len = ft_check(str);
     if (len == -1)
     {
-        printf("Error: Unmatched quotes\n");
+        ft_putstr_fd("Error: Unmatched quotes\n",2);
         return NULL;
     }
     else if (len == 0)
@@ -293,10 +376,6 @@ void  ft_search_variable(char ***command,char **env)
             }
         }
     }
-}
-int is_space(char c) 
-{
-    return (c == ' ' || c == '\t');
 }
 
 int is_space_or_quote(char c) 
@@ -576,7 +655,7 @@ char **ft_split_by_space(char **str)
     while (str[i])
     {
         if (str[i][0] != '"' && str[i][0] != '\'')
-            count += checkword(str[i], ' ');
+            count += check_command(str[i]);
         else
             count++;
         i++;
@@ -587,7 +666,7 @@ char **ft_split_by_space(char **str)
     {
         if (str[i][0] != '"' && str[i][0] != '\'')
         {
-            mini_str = ft_split(str[i], ' ');
+            mini_str = ft_split_by_space_tab(str[i]);
             j = filling(resu, NULL, mini_str, j);
             ft_free(mini_str);
         }
@@ -744,7 +823,8 @@ void print_list(t_list *list)
         printer (list->command);
         while (list->redir)
         {
-            printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
+            if (list->redir->type)
+                printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
             list->redir = list->redir->next;
         }
         list = list->next;
@@ -773,11 +853,40 @@ void init_shell(t_shell *minishell,char **env)
     minishell->exit_status = 0;
     minishell->list = NULL;
 }
+int is_redirection(char *str)
+{
+    if(ft_strcmp(str,"<<") == 0 || ft_strcmp(str,"<") == 0 || ft_strcmp(str,">>") == 0
+    || ft_strcmp(str,">") == 0)
+        return(1);
+    return(0);
+}
+int    check_error(char **command)
+{
+    int len;
+    int i;
 
+    i = 0;
+    len = ft_len_arry(command);
+    if(ft_strcmp(command[0],"|") == 0 || ft_strcmp(command[len - 1],"<") == 0 || ft_strcmp(command[len - 1 ],">") == 0 
+    || ft_strcmp(command[len - 1 ],"<<") == 0 || ft_strcmp(command[len - 1 ],">>") == 0)
+        return(1);
+    while(command[i + 1])
+    {
+        if(is_redirection(command[i]) == 1 && ( is_redirection(command[i + 1]) == 1 || ft_strcmp(command[i + 1],"|") == 0))
+            return(1);
+        i++;
+    }
+    return(0);
+}
+// void    free_list(t_list *list)
+// {
+    
+// }
 int main(int ac,char **av,char **env)
 {
     (void)ac;
     (void)av;
+    int c = 0;
     char **com;
     char **command;
     char *input;
@@ -786,7 +895,7 @@ int main(int ac,char **av,char **env)
     init_shell (&minishell,env);
     while(1)
     {
-        input = readline("\033[0;35mminishell$ \033[0m");
+        input = readline("minishell$ ");
         if(input == NULL)
             break ;
         com = ft_split_command(input);
@@ -798,10 +907,19 @@ int main(int ac,char **av,char **env)
             ft_join_quote(com);
             command = ft_split_by_space(com);
             ft_free(com);
-            minishell.list = ft_filling_list(command);
-            print_list (minishell.list);
-            // excution (list);
-            // free_list (list);
+            c = check_error(command);
+            if(c == 0)
+            {
+                minishell.list = ft_filling_list(command);
+                print_list (minishell.list);
+                // excution (list);
+                // free_list (minishell.list);
+            }
+            else
+            {
+                ft_putstr_fd("minishell: syntax error\n",2);
+                minishell.exit_status = 2;
+            }
             ft_free (command);
         }
         add_history(input);
