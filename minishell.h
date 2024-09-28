@@ -35,4 +35,5 @@ typedef struct s_shell
     int exit_status;
 }   t_shell;
 
+ void	free_arr(char **str);
 #endif

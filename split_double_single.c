@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/09/07 16:27:39 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/09/28 15:38:18 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ int	check_command(const char *str)
 	return (word);
 }
 
-static void	*free_mem(char **str, int i)
+ void	*free_arry(char **str, int i)
 {
 	while (i >= 0)
 	{
@@ -76,7 +76,7 @@ char	**ft_split_by_space_tab(char const *s)
 			i++;
 		result[j] = ft_substr(s, start, i - start);
 		if (result[j] == NULL)
-			return (free_mem(result, j));
+			return (free_arry(result, j));
 		j++;
 	}
 	result[j] = NULL;
@@ -235,8 +235,6 @@ void ft_split_quote(char *str, char ***command)
     (*command)[count] = NULL;
 }
 
-void printer (char **a);
-
 char **ft_split_command(char *str)
 {
     char **command;
@@ -249,6 +247,7 @@ char **ft_split_command(char *str)
     {
         ft_putstr_fd("Error: Unmatched quotes\n",2);
         return NULL;
+        //export = 2
     }
     else if (len == 0)
     {
@@ -264,14 +263,14 @@ char **ft_split_command(char *str)
     return command;
 }
 
-void printer(char **a)
-{
-    int i;
+// void printer(char **a)
+// {
+//     int i;
 
-    i = 0;
-    while (a[i])
-        printf ("--%s--\n", a[i++]);    
-}
+//     i = 0;
+//     while (a[i])
+//         printf ("--%s--\n", a[i++]);    
+// }
 int ft_strcmp_len(char *s1,char *s2, int len)
 {
     int	i;
@@ -599,18 +598,6 @@ void fix_quotes (char **str)
         i++;
     }
 }
-void    ft_free(char **str)
-{
-    int i;
-
-    i = 0;
-    while(str[i])
-    {
-        free(str[i]);
-        i++;
-    }
-    free(str);
-}
 int ft_len_arry(char **str)
 {
     int i;
@@ -668,7 +655,7 @@ char **ft_split_by_space(char **str)
         {
             mini_str = ft_split_by_space_tab(str[i]);
             j = filling(resu, NULL, mini_str, j);
-            ft_free(mini_str);
+            free_arr(mini_str);
         }
         else
             j = filling(resu, str[i], NULL, j);
@@ -698,14 +685,10 @@ t_dir    *creat_dir_list(int typ,char *name)
     redir = malloc(sizeof(t_dir));
     redir->type = typ;
     if(name[0] == '\"')
-    {
-        redir->file_name =ft_strdup(disable(name));
-        free(disable(name));
-    }
+        redir->file_name = disable(name);
     else
-        redir->file_name =ft_strdup(name);
+        redir->file_name =  ft_strdup(name);
     redir->next = NULL;
-    
     return(redir);
 }
 void    add_dir_node(t_dir  *redir,int typ,char *name)
@@ -720,7 +703,7 @@ void    filling_redir(t_list *list,int typ,char *name,int *c)
 {
     if((*c) == 0)
     {
-        list->redir= creat_dir_list(typ,name);
+        list->redir = creat_dir_list(typ,name);
         (*c) = 1;
     }
     else
@@ -816,20 +799,20 @@ t_list    *ft_filling_list(char **com)
     return(list);
 }
 
-void print_list(t_list *list)
-{
-    while (list)
-    {
-        printer (list->command);
-        while (list->redir)
-        {
-            if (list->redir->type)
-                printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
-            list->redir = list->redir->next;
-        }
-        list = list->next;
-    }
-}
+// void print_list(t_list *list)
+// {
+//     while (list)
+//     {
+//         printer (list->command);
+//         while (list->redir)
+//         {
+//             if (list->redir->type)
+//                 printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
+//             list->redir = list->redir->next;
+//         }
+//         list = list->next;
+//     }
+// }
 
 char **ft_strdup_arr(char **env)
 {
@@ -878,12 +861,56 @@ int    check_error(char **command)
     }
     return(0);
 }
-// void    free_list(t_list *list)
-// {
-    
-// }
+ void	free_arr(char **str)
+{
+    int i;
+
+    i = 0;
+	while(str[i])
+	{
+		free(str[i]);
+		i++;
+	}
+	free(str);
+}
+void    free_node(t_list *list)
+{
+    t_dir   *red;
+
+    free_arr(list->command);
+    list->command = NULL;
+    while(list->redir)
+    {
+        red = list->redir;
+        list->redir = list->redir->next;
+        red->type = 0;
+        free(red->file_name);
+        red->file_name = NULL;
+        free(red);
+        red = NULL;
+    }
+    list->next = NULL;
+}
+
+void    free_list(t_list *list)
+{
+    t_list *lst;
+    while(list)
+    {
+        lst = list;
+        list = list->next;
+        free_node(lst);
+        free(lst);
+        lst = NULL;
+    }
+}
+void lesk()
+{
+    system("leaks a.out");
+}
 int main(int ac,char **av,char **env)
 {
+    atexit(lesk);
     (void)ac;
     (void)av;
     int c = 0;
@@ -896,6 +923,7 @@ int main(int ac,char **av,char **env)
     while(1)
     {
         input = readline("minishell$ ");
+        
         if(input == NULL)
             break ;
         com = ft_split_command(input);
@@ -906,23 +934,25 @@ int main(int ac,char **av,char **env)
             ft_join(com);
             ft_join_quote(com);
             command = ft_split_by_space(com);
-            ft_free(com);
+            free_arr(com);
             c = check_error(command);
             if(c == 0)
             {
                 minishell.list = ft_filling_list(command);
-                print_list (minishell.list);
+                //print_list (minishell.list);
                 // excution (list);
-                // free_list (minishell.list);
+                free_list (minishell.list);
             }
             else
             {
                 ft_putstr_fd("minishell: syntax error\n",2);
                 minishell.exit_status = 2;
             }
-            ft_free (command);
+            free_arr(command);
         }
         add_history(input);
         free (input);
     }
+    free_arr(minishell.env);
+    free_arr(minishell.export);
 }
