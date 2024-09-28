@@ -263,14 +263,14 @@ char **ft_split_command(char *str)
     return command;
 }
 
-// void printer(char **a)
-// {
-//     int i;
+void printer(char **a)
+{
+    int i;
 
-//     i = 0;
-//     while (a[i])
-//         printf ("--%s--\n", a[i++]);    
-// }
+    i = 0;
+    while (a[i])
+        printf ("--%s--\n", a[i++]);    
+}
 int ft_strcmp_len(char *s1,char *s2, int len)
 {
     int	i;
@@ -285,7 +285,7 @@ int ft_strcmp_len(char *s1,char *s2, int len)
 	}
     if(i == len)
         return(0);
-	return (s1[i] - s2[i]);
+    return (s1[i] - s2[i]);
 }
 
 char *get_env_value(char **env, char *var)
@@ -514,11 +514,10 @@ char **ft_join(char **str)
     int i = 0;
     int len;
     int k = 0;
-    int len_next;
+
     while (str[i] && str[i + 1]) 
     {
         len = ft_strlen(str[i]);
-        len_next = ft_strlen(str[i + 1]);
        if(is_space_or_quote(str[i][len - 1]) == 0 && (str[i + 1][0] == '\'' || str[i + 1][0] == '\"'))
        {
             ft_collect_in_first(&str[i + 1],&str[i]); 
@@ -733,8 +732,7 @@ char **ft_add_command(char **com,int start,int pos,t_list *list)
         {
             if(com[i][0] == '\"')
             {
-                resu[j++] = ft_strdup(disable(com[i]));
-                free(disable(com[i]));
+                resu[j++] = disable(com[i]);
             }
             else
                 resu[j++] = ft_strdup(com[i]);
@@ -750,10 +748,11 @@ t_list    *creat_list(char **com,int start,int pos)
     t_list  *list;
     
     list = malloc(sizeof(t_list));
-    list->redir = malloc(sizeof(t_dir));
-    list->redir->type = 0;
-    list->redir->next = NULL;
-    list->redir->file_name =NULL;
+    // list->redir = malloc(sizeof(t_dir));
+    // list->redir->type = 0;
+    // list->redir->next = NULL;
+    // list->redir->file_name =NULL;
+    list->redir = NULL;
     list->command = ft_add_command(com ,start,pos,list);
     list->next = NULL;
     
@@ -766,6 +765,20 @@ void   add_node(t_list *list,char **com,int start,int pos)
     while(list->next)
         list = list->next;
     list->next = lst;
+}
+void print_list(t_list *list)
+{
+    while (list)
+    {
+        printer (list->command);
+        while (list->redir)
+        {
+            if (list->redir->type)
+                printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
+            list->redir = list->redir->next;
+        }
+        list = list->next;
+    }
 }
 t_list    *ft_filling_list(char **com)
 {
@@ -791,6 +804,7 @@ t_list    *ft_filling_list(char **com)
     }
     if(c == 0)
     {
+        // print_list(list);
         list = creat_list(com ,start, i);
         c = 1;
     }
@@ -798,21 +812,6 @@ t_list    *ft_filling_list(char **com)
         add_node(list,com,start,i);
     return(list);
 }
-
-// void print_list(t_list *list)
-// {
-//     while (list)
-//     {
-//         printer (list->command);
-//         while (list->redir)
-//         {
-//             if (list->redir->type)
-//                 printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
-//             list->redir = list->redir->next;
-//         }
-//         list = list->next;
-//     }
-// }
 
 char **ft_strdup_arr(char **env)
 {
@@ -904,13 +903,9 @@ void    free_list(t_list *list)
         lst = NULL;
     }
 }
-void lesk()
-{
-    system("leaks a.out");
-}
+
 int main(int ac,char **av,char **env)
 {
-    atexit(lesk);
     (void)ac;
     (void)av;
     int c = 0;
