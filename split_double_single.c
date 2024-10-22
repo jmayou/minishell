@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/09/28 15:38:18 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/10/22 13:42:46 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,7 @@ void ft_split_quote(char *str, char ***command)
     (*command)[count] = NULL;
 }
 
-char **ft_split_command(char *str)
+char **ft_split_command(char *str,int *n)
 {
     char **command;
     int len;
@@ -246,8 +246,8 @@ char **ft_split_command(char *str)
     if (len == -1)
     {
         ft_putstr_fd("Error: Unmatched quotes\n",2);
+        (*n) = 2;
         return NULL;
-        //export = 2
     }
     else if (len == 0)
     {
@@ -361,7 +361,7 @@ void  ft_search_variable(char ***command,char **env)
             j = -1;
             while (++j < len)
             {
-                if((*command)[i][j] == '$')
+                if((*command)[i][j] == '$' && ((*command)[i][j + 1] != '?' && (*command)[i][j + 1] != ' '))
                 {
                     var = get_variable((*command)[i], j + 1);
                     j += ft_strlen (var);
@@ -683,8 +683,13 @@ t_dir    *creat_dir_list(int typ,char *name)
     
     redir = malloc(sizeof(t_dir));
     redir->type = typ;
+    redir->is_quoted = 0;
     if(name[0] == '\"')
+    {
         redir->file_name = disable(name);
+        if(typ == HEREDOC)
+            redir->is_quoted = 1;
+    }
     else
         redir->file_name =  ft_strdup(name);
     redir->next = NULL;
@@ -748,10 +753,6 @@ t_list    *creat_list(char **com,int start,int pos)
     t_list  *list;
     
     list = malloc(sizeof(t_list));
-    // list->redir = malloc(sizeof(t_dir));
-    // list->redir->type = 0;
-    // list->redir->next = NULL;
-    // list->redir->file_name =NULL;
     list->redir = NULL;
     list->command = ft_add_command(com ,start,pos,list);
     list->next = NULL;
@@ -774,7 +775,7 @@ void print_list(t_list *list)
         while (list->redir)
         {
             if (list->redir->type)
-                printf ("redir type : %d and redir type : %s\n", list->redir->type, list->redir->file_name);
+              printf ("redir type : %d and redir type : %s is_quated = %d\n", list->redir->type, list->redir->file_name,list->redir->is_quoted);
             list->redir = list->redir->next;
         }
         list = list->next;
@@ -804,7 +805,6 @@ t_list    *ft_filling_list(char **com)
     }
     if(c == 0)
     {
-        // print_list(list);
         list = creat_list(com ,start, i);
         c = 1;
     }
@@ -903,9 +903,13 @@ void    free_list(t_list *list)
         lst = NULL;
     }
 }
-
+void    leak()
+{
+    system("leaks -q a.out");
+}
 int main(int ac,char **av,char **env)
 {
+    atexit(leak);
     (void)ac;
     (void)av;
     int c = 0;
@@ -913,15 +917,14 @@ int main(int ac,char **av,char **env)
     char **command;
     char *input;
     t_shell minishell;
-    
     init_shell (&minishell,env);
     while(1)
     {
         input = readline("minishell$ ");
-        
+        minishell.exit_status = 0;
         if(input == NULL)
             break ;
-        com = ft_split_command(input);
+        com = ft_split_command(input,&minishell.exit_status);
         if (com)
         {
             ft_search_variable(&com,minishell.env);
@@ -934,9 +937,9 @@ int main(int ac,char **av,char **env)
             if(c == 0)
             {
                 minishell.list = ft_filling_list(command);
-                //print_list (minishell.list);
+               print_list (minishell.list);
                 // excution (list);
-                free_list (minishell.list);
+              //  free_list (minishell.list);
             }
             else
             {

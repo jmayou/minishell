@@ -18,6 +18,7 @@ typedef struct s_dir
 {
     int type;
     char    *file_name;
+    int is_quoted;
     struct s_dir    *next;
 }   t_dir;
 
