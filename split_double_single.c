@@ -6,7 +6,7 @@
 /*   By: jmayou <jmayou@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/03 10:01:06 by jmayou            #+#    #+#             */
-/*   Updated: 2024/10/22 13:42:46 by jmayou           ###   ########.fr       */
+/*   Updated: 2024/11/16 10:50:46 by jmayou           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -939,7 +939,7 @@ int main(int ac,char **av,char **env)
                 minishell.list = ft_filling_list(command);
                print_list (minishell.list);
                 // excution (list);
-              //  free_list (minishell.list);
+               free_list (minishell.list);
             }
             else
             {
