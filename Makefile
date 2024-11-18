@@ -2,13 +2,13 @@ NAME = minishell
 
 CC = cc
 
- CFLAGS = -Wall -Wextra -Werror 
+ CFLAGS = -Wall -Wextra -Werror -I.
 
 LDFLAGS = -lreadline
 
 RM = rm -rf 
 
-SRC = error.c expand.c free.c filling_list.c filling_command.c filling_redirections.c help_join.c help.c join.c main.c split_cmd_by_quote.c split_cmd_by_space.c 
+SRC = parsing/error.c parsing/expand.c parsing/free.c parsing/filling_list.c parsing/filling_command.c parsing/filling_redirections.c parsing/help_join.c parsing/help.c parsing/join.c parsing/main.c parsing/split_cmd_by_quote.c parsing/split_cmd_by_space.c 
  
 OBJ = $(SRC:.c=.o)
 
